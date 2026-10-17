@@ -1,0 +1,76 @@
+// Wire messages for docktopus.
+//
+// Field meanings follow the domain types in docktopus-core:
+//   core::CoreType, core::Code, core::Coordinates, core::Object
+//   data::Region, data::Location
+//
+// Runtime-only state (persistence handles, layout helpers) is not on the wire.
+// Time fields are Unix epoch milliseconds. Grid sizes are uint64 so they match
+// a 64-bit size_t. CoreType ordinals match the C++ enum declaration order.
+//
+// Every field has an explicit id. Add new fields with a fresh id; do not
+// renumber existing ones.
+
+namespace docktopus.messages;
+
+enum CoreType : ubyte {
+  Location = 0,
+  Container = 1,
+  Booking = 2,
+  Region = 3,
+}
+
+/// 16 bytes, same order as boost::uuids::uuid.
+struct Uuid {
+  bytes: [ubyte:16];
+}
+
+struct Coordinates {
+  x: double;
+  y: double;
+  z: double;
+}
+
+table Code {
+  type: CoreType (id: 0);
+  uuid: Uuid (id: 1, required);
+}
+
+table Region {
+  code: Code (id: 0, required);
+  name: string (id: 1, required);
+  created_at_ms: int64 (id: 2);
+  last_modified_ms: int64 (id: 3);
+
+  points: [Coordinates] (id: 4);
+  slices: uint64 (id: 5);
+  slice_width: double (id: 6);
+  rows: uint64 (id: 7);
+  columns: uint64 (id: 8);
+}
+
+table Location {
+  code: Code (id: 0, required);
+  name: string (id: 1, required);
+  created_at_ms: int64 (id: 2);
+  last_modified_ms: int64 (id: 3);
+  parent: Code (id: 4, required);
+
+  row: uint64 (id: 5);
+  column: uint64 (id: 6);
+}
+
+union Payload {
+  Region,
+  Location,
+}
+
+/// One buffer, one record. The file identifier is "DKTP".
+/// A union occupies two ids: the type tag, then the value. The id below is the value.
+table Envelope {
+  payload: Payload (id: 1);
+}
+
+root_type Envelope;
+file_identifier "DKTP";
+file_extension "dtm";

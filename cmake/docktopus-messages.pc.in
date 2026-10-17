@@ -1,0 +1,8 @@
+prefix=@prefix@
+includedir=${prefix}/include
+
+Name: docktopus-messages
+Description: Docktopus FlatBuffers messages
+Version: @version@
+Requires: flatbuffers
+Cflags: -I${includedir}

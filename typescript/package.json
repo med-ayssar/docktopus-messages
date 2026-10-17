@@ -1,0 +1,26 @@
+{
+  "name": "docktopus-messages",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FlatBuffers messages for docktopus",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/docktopus/messages.d.ts",
+      "import": "./dist/docktopus/messages.js"
+    }
+  },
+  "types": "./dist/docktopus/messages.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/roundtrip.test.js"
+  },
+  "dependencies": {
+    "flatbuffers": "25.9.23"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.0",
+    "typescript": "5.8.3"
+  },
+  "license": "MIT"
+}
