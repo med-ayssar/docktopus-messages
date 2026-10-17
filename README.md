@@ -83,7 +83,7 @@ use docktopus_messages::messages::{Region, Location, Envelope};
 
 ## TypeScript
 
-The package in `typescript/` is a normal npm package. It vendors the generated files under `typescript/src/docktopus/`.
+The package in `typescript/` generates its messages when `npm run build` compiles it. The generated TypeScript files are not committed. `flatc` 25.12.19 must be on `PATH`, or `FLATC` must point at that binary.
 
 ```bash
 npm install --prefix typescript
@@ -100,12 +100,4 @@ Another package depends on it by path, after `npm run build` in `typescript/`:
 import { Region, Location, Envelope } from "docktopus-messages";
 ```
 
-## Regenerate TypeScript
-
-Edit `schema/docktopus.fbs`, then run:
-
-```bash
-./scripts/generate.sh
-```
-
-The script needs `flatc` 25.12.19 on `PATH`. Keep every field `id` stable. `nix flake check` rebuilds the C++ package only.
+`nix flake check` rebuilds the C++ package only. Keep every field `id` in `schema/docktopus.fbs` stable.
