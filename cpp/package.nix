@@ -3,19 +3,28 @@
   stdenv,
   cmake,
   flatbuffers,
+  repo,
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "docktopus-messages";
   version = "0.1.0";
 
   src = lib.cleanSourceWith {
-    src = ./.;
+    src = repo;
     filter =
       path: type:
       let
         base = baseNameOf path;
+        rel = lib.removePrefix (toString repo + "/") (toString path);
+        top = lib.head (lib.splitString "/" rel);
       in
-      !(builtins.elem base [
+      # The derivation builds C++ headers only. Rust and TypeScript stay out of the source.
+      !(builtins.elem top [
+        "rust"
+        "typescript"
+        "scripts"
+      ])
+      && !(builtins.elem base [
         "target"
         "node_modules"
         "dist"
@@ -53,7 +62,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   checkPhase = ''
     runHook preCheck
-    $CXX -std=c++23 -Wall -Wextra -Werror -I gen/include tests/roundtrip.cpp -o roundtrip
+    $CXX -std=c++23 -Wall -Wextra -Werror -I gen/include cpp/tests/roundtrip.cpp -o roundtrip
     ./roundtrip
     runHook postCheck
   '';
@@ -67,9 +76,9 @@ stdenv.mkDerivation (finalAttrs: {
       $out/share/docktopus-messages
     cp -r gen/include/. $out/include/
     cp schema/docktopus.fbs $out/share/docktopus-messages/docktopus.fbs
-    cp cmake/docktopus-messages-config.cmake $out/lib/cmake/docktopus-messages/
-    cp cmake/docktopus-messages-config-version.cmake $out/lib/cmake/docktopus-messages/
-    substitute cmake/docktopus-messages.pc.in $out/lib/pkgconfig/docktopus-messages.pc \
+    cp cpp/cmake/docktopus-messages-config.cmake $out/lib/cmake/docktopus-messages/
+    cp cpp/cmake/docktopus-messages-config-version.cmake $out/lib/cmake/docktopus-messages/
+    substitute cpp/cmake/docktopus-messages.pc.in $out/lib/pkgconfig/docktopus-messages.pc \
       --replace-fail @prefix@ "$out" \
       --replace-fail @version@ "${finalAttrs.version}"
     runHook postInstall
@@ -80,7 +89,7 @@ stdenv.mkDerivation (finalAttrs: {
   installCheckPhase = ''
     runHook preInstallCheck
     mkdir -p smoke
-    cp tests/roundtrip.cpp smoke/roundtrip.cpp
+    cp cpp/tests/roundtrip.cpp smoke/roundtrip.cpp
     cat > smoke/CMakeLists.txt <<'EOF'
     cmake_minimum_required(VERSION 3.16)
     project(docktopus-messages-smoke CXX)

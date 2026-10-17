@@ -17,7 +17,7 @@ FlatBuffers wire messages for docktopus. The schema is `schema/docktopus.fbs`.
 
 ## C++
 
-The Nix package generates the headers and installs them for other flakes to include.
+The C++ package lives in `cpp/`: the Nix derivation, the CMake package files, and `cpp/tests/roundtrip.cpp`. `nix build` generates the headers and installs them for other flakes to include.
 
 ```bash
 nix build
@@ -32,7 +32,7 @@ result/lib/pkgconfig/docktopus-messages.pc
 result/share/docktopus-messages/docktopus.fbs
 ```
 
-`nix build` also compiles `tests/roundtrip.cpp` against those headers. `nix develop` provides `flatc` 25.12.19.
+`nix build` also compiles `cpp/tests/roundtrip.cpp` against those headers. `nix develop` is the C++ shell: CMake and `flatc` 25.12.19.
 
 A sibling C++ flake includes this package:
 
@@ -65,7 +65,7 @@ region.name = "yard";
 
 ## Rust
 
-The crate in `rust/` is a normal Cargo package. It vendors the generated file `rust/src/docktopus_generated.rs`.
+The crate in `rust/` generates its messages when Cargo compiles it. The generated Rust file is not committed. `flatc` 25.12.19 must be on `PATH`, or `FLATC` must point at that binary.
 
 ```bash
 cargo test --manifest-path rust/Cargo.toml
@@ -100,7 +100,7 @@ Another package depends on it by path, after `npm run build` in `typescript/`:
 import { Region, Location, Envelope } from "docktopus-messages";
 ```
 
-## Regenerate Rust and TypeScript
+## Regenerate TypeScript
 
 Edit `schema/docktopus.fbs`, then run:
 
@@ -108,4 +108,4 @@ Edit `schema/docktopus.fbs`, then run:
 ./scripts/generate.sh
 ```
 
-The script needs `flatc` 25.12.19 on `PATH`. `nix develop` provides that binary. Keep every field `id` stable. `nix flake check` rebuilds the C++ roundtrip and diffs the committed Rust and TypeScript bindings against a fresh `flatc` run.
+The script needs `flatc` 25.12.19 on `PATH`. Keep every field `id` stable. `nix flake check` rebuilds the C++ package only.

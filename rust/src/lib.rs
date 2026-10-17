@@ -1,8 +1,10 @@
-//! Wire messages generated from `schema/docktopus.fbs`.
+//! Wire messages generated from `schema/docktopus.fbs` when this crate is compiled.
 //!
-//! `scripts/generate.sh` refreshes this crate. Building it needs Cargo and the
-//! `flatbuffers` crate, and does not need Nix.
+//! The build runs `flatc` 25.12.19. Set `FLATC` when that binary is not on `PATH`.
 
-mod docktopus_generated;
+#[allow(dead_code, unused_imports, clippy::all)]
+mod generated {
+    include!(concat!(env!("OUT_DIR"), "/docktopus_generated.rs"));
+}
 
-pub use docktopus_generated::docktopus::messages;
+pub use generated::docktopus::messages;

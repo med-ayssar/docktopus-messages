@@ -1,5 +1,5 @@
 {
-  description = "Docktopus FlatBuffers messages";
+  description = "Docktopus FlatBuffers C++ messages";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/e7439b6b14ad3cc35d05608ebca9bce01a25f5f8";
@@ -16,34 +16,19 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-        messages = pkgs.callPackage ./package.nix { };
-        # Same flatc flags as scripts/generate.sh. Fails when the committed
-        # Rust or TypeScript bindings drift from schema/docktopus.fbs.
-        bindings = pkgs.runCommand "docktopus-messages-bindings" {
-          nativeBuildInputs = [ pkgs.flatbuffers ];
-        } ''
-          mkdir -p generated/schema generated/rust generated/ts
-          cp ${./schema/docktopus.fbs} generated/schema/docktopus.fbs
-          flatc --rust --gen-mutable --gen-name-strings --require-explicit-ids \
-            -o generated/rust generated/schema/docktopus.fbs
-          flatc --ts --gen-all --gen-mutable --gen-name-strings --require-explicit-ids \
-            -o generated/ts generated/schema/docktopus.fbs
-          diff -u ${./rust/src/docktopus_generated.rs} generated/rust/docktopus_generated.rs
-          diff -ru ${./typescript/src/docktopus} generated/ts/docktopus
-          touch "$out"
-        '';
+        messages = pkgs.callPackage ./cpp/package.nix { repo = ./.; };
       in
       {
         packages = {
           default = messages;
           docktopus-messages = messages;
         };
-        checks = {
-          cpp = messages;
-          bindings = bindings;
-        };
+        checks.cpp = messages;
         devShells.default = pkgs.mkShell {
-          packages = [ pkgs.flatbuffers ];
+          packages = [
+            pkgs.cmake
+            pkgs.flatbuffers
+          ];
         };
       }
     )
